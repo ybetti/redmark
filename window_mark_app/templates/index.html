@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Window Marker App</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</head>
+<body>
+    <h1>Window Marker App</h1>
+    <select id="window-select"></select>
+    <button id="update-window-list">Update Window List</button>
+    <br><br>
+    <img id="window-image" alt="Window Image" style="border:1px solid black;">
+
+    <script>
+        $(document).ready(function() {
+            updateWindowList();
+
+            $('#update-window-list').click(function() {
+                updateWindowList();
+            });
+
+            $('#window-select').change(function() {
+                const windowTitle = $(this).val();
+                if (windowTitle) {
+                    setInterval(() => {
+                        getWindowImage(windowTitle);
+                    }, 1000);
+                }
+            });
+        });
+
+        function updateWindowList() {
+            $.get('/get_windows', function(windows) {
+                const windowSelect = $('#window-select');
+                windowSelect.empty();
+                windowSelect.append('<option value="">Select a window</option>');
+                windows.forEach(function(window) {
+                    windowSelect.append('<option value="' + window + '">' + window + '</option>');
+                });
+            });
+        }
+
+        function getWindowImage(windowTitle) {
+            $.ajax({
+                url: '/get_window_image',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ window_title: windowTitle }),
+                success: function(response) {
+                    const image = new Image();
+                    image.src = 'data:image/jpeg;base64,' + response.image;
+                    $('#window-image').attr('src', image.src);
+                },
+                error: function() {
+                    console.error('Failed to get window image');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
